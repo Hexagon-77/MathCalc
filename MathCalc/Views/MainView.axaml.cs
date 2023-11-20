@@ -2,22 +2,11 @@
 using Avalonia.Interactivity;
 using System.Net;
 using System;
-using System.Net.Http;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
-using System.IO;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Avalonia;
 using Avalonia.Threading;
-using Avalonia.Controls.ApplicationLifetimes;
-using ReactiveUI;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using AngouriMath;
 using SuperSimpleTcp;
-using AngouriMath;
-using AngouriMath.Extensions;
 
 namespace MathCalc.Views
 {

@@ -6,7 +6,7 @@
         xmlns:views="clr-namespace:MathCalc.Views" Width="420" Height="550"
         mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="450"
         x:Class="MathCalc.Views.MainWindow"
-        Icon="/Assets/avalonia-logo.ico" Closing="Main_Closing"
+        Icon="/Assets/logo.ico" Closing="Main_Closing"
         Title="MathCalc">
         <views:MainView />
 </Window>
