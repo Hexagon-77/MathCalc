@@ -10,10 +10,10 @@
              x:DataType="vm:MainViewModel">
 	<UserControl.Styles>
 		<Style Selector="Button, RepeatButton, TextBox, ComboBox">
-			<Setter Property="Background" Value="#111"/>
+			<Setter Property="Background" Value="#1A1A1A"/>
 			<Setter Property="FontWeight" Value="Medium"/>
 			<Setter Property="CornerRadius" Value="18"/>
-			<Setter Property="Padding" Value="12 8"/>
+			<Setter Property="Padding" Value="12 9 12 7"/>
 			<Setter Property="Transitions">
 				<Transitions>
 					<DoubleTransition Duration="0:0:0.2" Property="Opacity"/>
@@ -43,7 +43,7 @@
 			</Setter>
 		</Style>
 		<Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-			<Setter Property="Background" Value="#222"/>
+			<Setter Property="Background" Value="#2E2E2E"/>
 		</Style>
 		<Style Selector="Button.high:pointerover /template/ ContentPresenter#PART_ContentPresenter">
 			<Setter Property="Foreground" Value="White"/>
@@ -52,7 +52,7 @@
 					<RadialGradientBrush GradientOrigin="0.5 1" Radius="1"
 										 Center="0.5 1">
 						<RadialGradientBrush.GradientStops>
-							<GradientStop Color="#5470FF" Offset="0"/>
+							<GradientStop Color="#6480FF" Offset="0"/>
 							<GradientStop Color="#2DBCFF" Offset="1"/>
 						</RadialGradientBrush.GradientStops>
 					</RadialGradientBrush>

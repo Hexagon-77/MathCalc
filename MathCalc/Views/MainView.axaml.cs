@@ -7,6 +7,8 @@ using System.Text;
 using Avalonia.Threading;
 using AngouriMath;
 using SuperSimpleTcp;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace MathCalc.Views
 {
@@ -16,6 +18,8 @@ namespace MathCalc.Views
 
         public static SimpleTcpServer Server;
         public static SimpleTcpClient Client;
+
+        public List<int> Solves;
 
         public MainView()
         {
@@ -59,7 +63,7 @@ namespace MathCalc.Views
 
                 Entity response = TbAnswer.Text ?? "0";
 
-                if (Exercise != null)
+                if (Exercise != null && !Exercise.Solved)
                     Exercise.SolveCount++;
 
                 bool correct = response.Simplify().EqualsImprecisely(answer.Simplify());
@@ -73,6 +77,14 @@ namespace MathCalc.Views
                 else
                 {
                     TbFeedback.Text = "Ai răspuns correct!";
+
+                    if (Exercise != null && !Exercise.Solved)
+                    {
+                        Exercise.Solved = true;
+
+                        if (Client != null)
+                            Client.Send($"Solve,{Exercise.Index},{Exercise.SolveCount}");
+                    }
                 }
 
                 if (Exercise != null)
@@ -128,7 +140,7 @@ namespace MathCalc.Views
         {
             try
             {
-                Client = new(TbEquation.Text + ":7182");
+                Client = new(TbEquation.Text + ":7778");
                 Client.Events.DataReceived += Client_ReceivedData;
 
                 Client.Connect();
@@ -142,13 +154,21 @@ namespace MathCalc.Views
 
         private async void Server_Click(object sender, RoutedEventArgs e)
         {
-            LoadExercise(new());
-            TbIndication.IsVisible = true;
-            CbType.IsVisible = true;
+            try
+            {
+                LoadExercise(new());
+                TbIndication.IsVisible = true;
+                CbType.IsVisible = true;
 
-            Server = new("127.0.0.1:7182");
-            await Server.StartAsync();
-            TbFeedback.Text = "Server profesor pornit.\nCod de conectare: " + GetIPAddress().ToString();
+                Server = new("*:7778");
+                Server.Events.DataReceived += Server_ReceivedData;
+                Server.Start();
+                TbFeedback.Text = "Server profesor pornit.\nCod de conectare: " + GetIPAddress().ToString();
+            }
+            catch (Exception Exception)
+            {
+                TbFeedback.Text = "Eroare server:\n" + Exception.Message;
+            }
         }
 
         public static IPAddress GetIPAddress()
@@ -169,6 +189,7 @@ namespace MathCalc.Views
         {
             try
             {
+                Solves = new();
                 Exercise.Equation = TbEquation.Text;
                 Exercise.Indication = TbIndication.Text;
                 Exercise.Type = (EquationType)CbType.SelectedItem;
@@ -205,11 +226,35 @@ namespace MathCalc.Views
                         Index = index,
                         Equation = equation,
                         SolveCount = 0,
-                        Indication = indication
+                        Indication = indication,
+                        Type = type
                     };
 
                     Dispatcher.UIThread.Post(() =>
                         LoadExercise(receivedExercise)
+                    );
+                }
+                catch { }
+            }
+        }
+
+        private void Server_ReceivedData(object sender, DataReceivedEventArgs e)
+        {
+            string data = Encoding.UTF8.GetString(e.Data.Array, 0, e.Data.Count);
+
+            if (data.StartsWith("Solve"))
+            {
+                try
+                {
+                    string[] solveParts = data.Split(',');
+                    int index = int.Parse(solveParts[1]);
+                    int count = int.Parse(solveParts[2]);
+
+                    if (index == Exercise.Index)
+                        Solves.Add(count);
+
+                    Dispatcher.UIThread.Post(() =>
+                        TbFeedback.Text = "Rezolvare corectă! " + Solves.Count + "/" + Server.Connections + " elevi\nRezolvări până acum:\n" + Solves.Select(x => x.ToString() + (x == 1 ? " încercare" : " încercări")).Aggregate((t, x) => t += "\n" + x)
                     );
                 }
                 catch { }
@@ -224,6 +269,8 @@ namespace MathCalc.Views
         public string Indication = "";
         public int SolveCount = 0;
         public EquationType Type = EquationType.Calcul;
+
+        public bool Solved = false;
     }
 
     public enum EquationType

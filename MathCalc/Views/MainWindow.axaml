@@ -9,9 +9,9 @@
         Icon="/Assets/logo.ico" Closing="Main_Closing" FontFamily="{StaticResource Overpass}"
         Title="MathCalc">
 	<DockPanel>
-		<StackPanel Background="#111" IsHitTestVisible="False" DockPanel.Dock="Top" Orientation="Horizontal">
+		<StackPanel Background="#1A1A1A" IsHitTestVisible="False" DockPanel.Dock="Top" Orientation="Horizontal">
 			<Image Source="/Assets/logo.png" Height="18" Width="18" Margin="6"></Image>
-			<TextBlock VerticalAlignment="Center" FontWeight="Thin" FontSize="15" Text="MathCalc"></TextBlock>
+			<TextBlock VerticalAlignment="Center" Margin="0 4 0 0" FontWeight="Thin" FontSize="16" Text="MathCalc"></TextBlock>
 		</StackPanel>
         <views:MainView />
 	</DockPanel>
