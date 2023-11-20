@@ -8,28 +8,75 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
              x:Class="MathCalc.Views.MainView"
              x:DataType="vm:MainViewModel">
-  <Design.DataContext>
-    <!-- This only sets the DataContext for the previewer in an IDE,
-         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-    <vm:MainViewModel />
-  </Design.DataContext>
+	<UserControl.Styles>
+		<Style Selector="Button, RepeatButton, TextBox, ComboBox">
+			<Setter Property="Background" Value="#111"/>
+			<Setter Property="FontWeight" Value="Medium"/>
+			<Setter Property="CornerRadius" Value="18"/>
+			<Setter Property="Padding" Value="12 8"/>
+			<Setter Property="Transitions">
+				<Transitions>
+					<DoubleTransition Duration="0:0:0.2" Property="Opacity"/>
+					<BrushTransition Duration="0:0:0.2" Property="Background"/>
+				</Transitions>
+			</Setter>
+		</Style>
+		<Style Selector="Button.high">
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="Background">
+				<Setter.Value>
+					<RadialGradientBrush GradientOrigin="0.5 1" Radius="1"
+										 Center="0.5 1">
+						<RadialGradientBrush.GradientStops>
+							<GradientStop Color="#2A49FF" Offset="0"/>
+							<GradientStop Color="#00ADFF" Offset="1"/>
+						</RadialGradientBrush.GradientStops>
+					</RadialGradientBrush>
+				</Setter.Value>
+			</Setter>
+		</Style>
+		<Style Selector="Button /template/ ContentPresenter#PART_ContentPresenter">
+			<Setter Property="Transitions">
+				<Transitions>
+					<BrushTransition Duration="0:0:0.2" Property="Background"/>
+				</Transitions>
+			</Setter>
+		</Style>
+		<Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+			<Setter Property="Background" Value="#222"/>
+		</Style>
+		<Style Selector="Button.high:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="Background">
+				<Setter.Value>
+					<RadialGradientBrush GradientOrigin="0.5 1" Radius="1"
+										 Center="0.5 1">
+						<RadialGradientBrush.GradientStops>
+							<GradientStop Color="#5470FF" Offset="0"/>
+							<GradientStop Color="#2DBCFF" Offset="1"/>
+						</RadialGradientBrush.GradientStops>
+					</RadialGradientBrush>
+				</Setter.Value>
+			</Setter>
+		</Style>
+	</UserControl.Styles>
 
-	<StackPanel Orientation="Vertical" Width="325" Spacing="10" Margin="45">
-		<TextBlock x:Name="TbExercise" Text="Exersează" FontWeight="SemiBold" FontSize="20"></TextBlock>
-		<xm:FormulaBlock HorizontalAlignment="Center" Margin="0 7" x:Name="Formula"></xm:FormulaBlock>
-	    <TextBox Watermark="Ecuație" TextChanged="TbEquation_TextChanged" x:Name="TbEquation"></TextBox>
-	    <TextBox Watermark="Răspuns" x:Name="TbAnswer"></TextBox>
-	    <ComboBox x:Name="CbType" HorizontalAlignment="Stretch"></ComboBox>
-	    <TextBox Watermark="Indicații" x:Name="TbIndication" Text="Rezolvați ecuația" IsVisible="false"></TextBox>
-        <TextBlock x:Name="TbFeedback" MinHeight="65" TextWrapping="Wrap" Margin="0 10" Text="Introduceți o ecuație." HorizontalAlignment="Center" VerticalAlignment="Center"/>
-	    <Button Click="Calc_Click" Classes="accent" Content="Verifică răspunsul" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"></Button>
-	    <Button Click="Connect_Click" Content="Conectare la profesor" Margin="0 20 0 0" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch">
+	<StackPanel Orientation="Vertical" MinWidth="325" HorizontalAlignment="Stretch" Spacing="10" Margin="22">
+		<TextBlock x:Name="TbExercise" Text="Exersează" FontWeight="ExtraBold" FontSize="24"></TextBlock>
+		<xm:FormulaBlock HorizontalAlignment="Center" Margin="0 9" x:Name="Formula"></xm:FormulaBlock>
+		<TextBox Watermark="Ecuație" TextChanged="TbEquation_TextChanged" x:Name="TbEquation"></TextBox>
+		<TextBox Watermark="Răspuns" x:Name="TbAnswer"></TextBox>
+		<ComboBox Padding="12 2 12 -2" x:Name="CbType" HorizontalAlignment="Stretch"></ComboBox>
+		<TextBox Watermark="Indicații" x:Name="TbIndication" Text="Rezolvați ecuația" IsVisible="false"></TextBox>
+		<TextBlock x:Name="TbFeedback" MinHeight="70" TextWrapping="Wrap" Margin="0 10" Text="Introduceți o ecuație." HorizontalAlignment="Center" VerticalAlignment="Center"/>
+		<Button Click="Calc_Click" Classes="high" Content="Verifică răspunsul" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"></Button>
+		<Button Click="Connect_Click" Content="Conectare la profesor" Margin="0 20 0 -4" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch">
 			<Button.ContextMenu>
 				<ContextMenu>
-					<MenuItem Click="Server_Click" Header="Pornire server profesor"></MenuItem>
+					<MenuItem FontFamily="{StaticResource Overpass}" Margin="0 2 0 -2" FontWeight="Medium" Click="Server_Click" Header="Pornire server profesor"></MenuItem>
 				</ContextMenu>
 			</Button.ContextMenu>
 		</Button>
-	    <Button Click="Exercise_Click" Content="Trimitere exercițiu" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"></Button>
+		<Button Click="Exercise_Click" Content="Trimitere exercițiu" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"></Button>
 	</StackPanel>
 </UserControl>

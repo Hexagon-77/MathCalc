@@ -12,10 +12,10 @@
   </ItemGroup>
   
   <ItemGroup>
-    <None Include="..\Logo.png">
+    <AvaloniaResource Include="..\Logo.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
-    </None>
+    </AvaloniaResource>
   </ItemGroup>
 
   <ItemGroup>

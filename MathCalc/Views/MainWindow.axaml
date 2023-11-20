@@ -3,10 +3,16 @@
         xmlns:vm="using:MathCalc.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:views="clr-namespace:MathCalc.Views" Width="420" Height="550"
+        xmlns:views="clr-namespace:MathCalc.Views" Width="420" Height="620"
         mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="450"
-        x:Class="MathCalc.Views.MainWindow"
-        Icon="/Assets/logo.ico" Closing="Main_Closing"
+        x:Class="MathCalc.Views.MainWindow" ExtendClientAreaToDecorationsHint="True"
+        Icon="/Assets/logo.ico" Closing="Main_Closing" FontFamily="{StaticResource Overpass}"
         Title="MathCalc">
+	<DockPanel>
+		<StackPanel Background="#111" IsHitTestVisible="False" DockPanel.Dock="Top" Orientation="Horizontal">
+			<Image Source="/Assets/logo.png" Height="18" Width="18" Margin="6"></Image>
+			<TextBlock VerticalAlignment="Center" FontWeight="Thin" FontSize="15" Text="MathCalc"></TextBlock>
+		</StackPanel>
         <views:MainView />
+	</DockPanel>
 </Window>
