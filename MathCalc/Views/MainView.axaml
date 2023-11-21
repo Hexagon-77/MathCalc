@@ -33,15 +33,24 @@
 		<Style Selector="ComboBox /template/ Border#PopupBorder">
 			<Setter Property="CornerRadius" Value="20"/>
 		</Style>
-		<Style Selector="ToolTip">
+		<Style Selector="ToolTip, ContextMenu">
 			<Setter Property="FontWeight" Value="SemiLight"/>
+      <Setter Property="Padding" Value="-3"/>
 			<Setter Property="FontFamily" Value="{StaticResource Overpass}"/>
-			<Setter Property="Padding" Value="10 5 10 3"/>
 			<Setter Property="CornerRadius" Value="20"/>
 			<Setter Property="BorderThickness" Value="3"/>
 			<Setter Property="BorderBrush" Value="#151515"/>
 			<Setter Property="Background" Value="#111"/>
 		</Style>
+    <Style Selector="ToolTip">
+      <Setter Property="Padding" Value="10 5 10 3"/>
+    </Style>
+    <Style Selector="MenuItem">
+      <Setter Property="CornerRadius" Value="20"/>
+      <Setter Property="Margin" Value="4 0"/>
+      <Setter Property="Padding" Value="8 5 8 2"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+    </Style>
 		<Style Selector="Button.high">
 			<Setter Property="Foreground" Value="White"/>
 			<Setter Property="Background">
@@ -56,7 +65,7 @@
 				</Setter.Value>
 			</Setter>
 		</Style>
-		<Style Selector="Button /template/ ContentPresenter#PART_ContentPresenter">
+		<Style Selector="Button /template/ ContentPresenter#PART_ContentPresenter, ToggleButton /template/ ContentPresenter#PART_ContentPresenter">
 			<Setter Property="Transitions">
 				<Transitions>
 					<BrushTransition Duration="0:0:0.2" Property="Background"/>
@@ -92,27 +101,27 @@
 	<StackPanel Orientation="Vertical" MinWidth="325" HorizontalAlignment="Stretch" Spacing="10" Margin="22">
 		<TextBlock x:Name="TbExercise" Text="Exersează" FontWeight="ExtraBold" FontSize="24"></TextBlock>
 		<xm:FormulaBlock HorizontalAlignment="Center" Margin="0 9" x:Name="Formula"></xm:FormulaBlock>
-		<TextBox Watermark="Ecuație" TextChanged="TbEquation_TextChanged" x:Name="TbEquation"></TextBox>
-		<TextBox Watermark="Răspuns" TextChanged="TbResponse_TextChanged" x:Name="TbAnswer"></TextBox>
+		<TextBox Text="192.168.0.0" Watermark="Ecuație" TextChanged="TbEquation_TextChanged" x:Name="TbEquation"></TextBox>
+		<TextBox Text="Elev" Watermark="Răspuns" TextChanged="TbResponse_TextChanged" x:Name="TbAnswer"></TextBox>
 		<ComboBox Padding="12 2 12 -2" x:Name="CbType" HorizontalAlignment="Stretch"></ComboBox>
 		<TextBox Watermark="Indicații" x:Name="TbIndication" Text="Rezolvați ecuația" IsVisible="false"></TextBox>
 		<ScrollViewer MinHeight="70" MaxHeight="165">
 			<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
 				<TextBlock x:Name="TbFeedback" TextAlignment="Center" TextWrapping="Wrap" Margin="0 15" Text="Introduceți o ecuație." HorizontalAlignment="Center"/>
-				<xm:FormulaBlock HorizontalAlignment="Center" Margin="0 0 0 8" x:Name="FormulaFeedback"></xm:FormulaBlock>
+				<xm:FormulaBlock HorizontalAlignment="Center" Padding="0 0 0 8" x:Name="FormulaFeedback"></xm:FormulaBlock>
 			</StackPanel>
 		</ScrollViewer>
 		<Button Click="Calc_Click" Classes="high" Content="Verifică răspunsul" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch">
 			<Button.ContextMenu>
 				<ContextMenu>
-					<MenuItem FontFamily="{StaticResource Overpass}" Margin="0 2 0 -2" FontWeight="Medium" Click="Disconnect_Click" Header="Deconectare"></MenuItem>
+					<MenuItem Click="Disconnect_Click" Header="Deconectare"></MenuItem>
 				</ContextMenu>
 			</Button.ContextMenu>
 		</Button>
 		<Button x:Name="BtConnect" Click="Connect_Click" Content="Conectare la profesor" Margin="0 20 0 -4" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch">
 			<Button.ContextMenu>
 				<ContextMenu>
-					<MenuItem FontFamily="{StaticResource Overpass}" Margin="0 2 0 -2" FontWeight="Medium" Click="Server_Click" Header="Pornire server profesor"></MenuItem>
+					<MenuItem Click="Server_Click" Header="Pornire server profesor"></MenuItem>
 				</ContextMenu>
 			</Button.ContextMenu>
 		</Button>
@@ -125,7 +134,7 @@
 				</Viewbox>
 			</ToggleButton>
 		</Grid>
-		<Border x:Name="QuestionPanel" IsVisible="False" Opacity="0" Margin="5 0 0 0" CornerRadius="18 0 0 18" Padding="10 5 10 10" Background="#223">
+		<Border x:Name="QuestionPanel" IsVisible="False" Opacity="0" Margin="5" CornerRadius="18" Padding="10 5 10 10" Background="#223">
 			<Grid RowDefinitions="auto, auto" ColumnDefinitions="*, auto, auto" MinHeight="100">
 				<TextBlock FontFamily="{StaticResource Overpass}" FontWeight="DemiBold" FontSize="20" Grid.ColumnSpan="3" HorizontalAlignment="Left" Padding="6 12 0 0" Text="Întrebare"></TextBlock>
 				<xm:FormulaBlock Grid.Row="1" Grid.ColumnSpan="3" HorizontalAlignment="Center" Margin="0 0 0 8" x:Name="FormulaQuestion"></xm:FormulaBlock>

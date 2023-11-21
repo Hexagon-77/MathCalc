@@ -16,12 +16,13 @@ namespace MathCalc.Views
 {
     public partial class MainView : UserControl
     {
+        string Name;
         Exercise Exercise;
 
         public static SimpleTcpServer Server;
         public static SimpleTcpClient Client;
 
-        public List<int> Solves;
+        public List<(string, int)> Solves;
 
         public MainView()
         {
@@ -33,7 +34,7 @@ namespace MathCalc.Views
 
         private Entity ParseExpression(string exp)
         {
-            return exp.Replace("lim", "limit").Replace("deriv", "derivative").Replace("int", "integral").Replace("tg", "tan").Replace("+inf", "+oo").Replace("-inf", "-oo").Replace("inf", "+oo");
+            return exp.Replace("lim", "limit").Replace("deriv(", "derivative").Replace("int(", "integral").Replace("tg", "tan").Replace("+inf", "+oo").Replace("-inf", "-oo").Replace("inf", "+oo");
         }
 
         private void Calc_Click(object sender, RoutedEventArgs e)
@@ -94,8 +95,7 @@ namespace MathCalc.Views
                     {
                         Exercise.Solved = true;
 
-                        if (Client != null)
-                            Client.Send($"Solve,{Exercise.Index},{Exercise.SolveCount}");
+                        Client?.Send($"Solve,{Exercise.Index},{Exercise.SolveCount},{Name}");
                     }
                 }
             }
@@ -142,6 +142,9 @@ namespace MathCalc.Views
             CbType.SelectedItem = Exercise.Type;
             CkShowSolve.IsChecked = Exercise.SolutionVisible;
 
+            TbAnswer.Text = string.Empty;
+            FormulaFeedback.Formula = string.Empty;
+
             TbIndication.Text = Exercise.Indication;
             TbFeedback.Text = Exercise.Indication;
         }
@@ -154,6 +157,8 @@ namespace MathCalc.Views
                 Client.Events.DataReceived += Client_ReceivedData;
                 Client.Events.Connected += Client_Connected;
                 Client.Events.Disconnected += Client_Disconnected;
+
+                Name = string.IsNullOrWhiteSpace(TbAnswer.Text) ? "Elev" : TbAnswer.Text;
 
                 Client.Connect();
                 TbFeedback.Text = "Conectat.";
@@ -168,6 +173,7 @@ namespace MathCalc.Views
         {
             try
             {
+                Solves = new();
                 LoadExercise(new());
                 TbIndication.IsVisible = true;
                 CbType.IsVisible = true;
@@ -176,7 +182,9 @@ namespace MathCalc.Views
                 Server.Events.DataReceived += Server_ReceivedData;
                 Server.Events.ClientConnected += Server_ClientConnected;
                 Server.Start();
-                TbFeedback.Text = "Server profesor pornit.\nCod de conectare: " + GetIPAddress().ToString();
+
+                TbFeedback.Text = "Server profesor pornit.\n\nCod de conectare: " + GetIPAddress().ToString();
+                BtConnect.IsEnabled = false;
             }
             catch (Exception Exception)
             {
@@ -261,6 +269,7 @@ namespace MathCalc.Views
             try
             {
                 Client.Disconnect();
+                Client.Dispose();
                 Client = null;
             }
             catch
@@ -313,13 +322,16 @@ namespace MathCalc.Views
                     string[] solveParts = data.Split(',');
                     int index = int.Parse(solveParts[1]);
                     int count = int.Parse(solveParts[2]);
+                    string name = solveParts[3];
 
                     if (index == Exercise.Index)
-                        Solves.Add(count);
+                    {
+                        Solves.Add((name, count));
 
-                    Dispatcher.UIThread.Post(() =>
-                        TbFeedback.Text = "Rezolvare corectă! " + Solves.Count + "/" + Server.Connections + " elevi\nRezolvări până acum:\n" + Solves.Select(x => x.ToString() + (x == 1 ? " încercare" : " încercări")).Aggregate((t, x) => t += "\n" + x)
-                    );
+                        Dispatcher.UIThread.Post(() =>
+                            TbFeedback.Text = name + " a rezolvat!\n\n" + Solves.Count + "/" + Server.Connections + " rezolvări până acum:\n" + Solves.Select(x => x.Item1 + " - " + x.Item2.ToString() + (x.Item2 == 1 ? " încercare" : " încercări")).Aggregate((t, x) => t += "\n" + x)
+                        );
+                    }
                 }
                 catch { }
             }
@@ -354,11 +366,14 @@ namespace MathCalc.Views
             }
         }
 
-        private void Server_ClientConnected(object sender, ConnectionEventArgs e)
+        private async void Server_ClientConnected(object sender, ConnectionEventArgs e)
         {
             Dispatcher.UIThread.Post(() =>
                 TbFeedback.Text = "Elev conectat.\nElevi: " + Server.Connections
             );
+
+            if (Exercise != null)
+                await Server.SendAsync(e.IpPort, $"Exercise,{Exercise.Index},{Exercise.Equation},{Exercise.Indication},{Exercise.Type},{Exercise.SolutionVisible}");
         }
 
         private void Client_Connected(object sender, ConnectionEventArgs e)
