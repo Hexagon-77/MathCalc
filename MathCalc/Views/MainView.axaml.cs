@@ -9,6 +9,8 @@ using AngouriMath;
 using SuperSimpleTcp;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using AngouriMath.Extensions;
 
 namespace MathCalc.Views
 {
@@ -31,7 +33,7 @@ namespace MathCalc.Views
 
         private Entity ParseExpression(string exp)
         {
-            return exp.Replace("lim", "limit").Replace("deriv", "derivative").Replace("int", "integral").Replace("tg", "tan").Replace("+inf", "+oo").Replace("-inf", "-oo");
+            return exp.Replace("lim", "limit").Replace("deriv", "derivative").Replace("int", "integral").Replace("tg", "tan").Replace("+inf", "+oo").Replace("-inf", "-oo").Replace("inf", "+oo");
         }
 
         private void Calc_Click(object sender, RoutedEventArgs e)
@@ -43,7 +45,7 @@ namespace MathCalc.Views
                 Formula.Formula = expression.Latexise();
                 Entity answer;
 
-                switch ((EquationType)(CbType.SelectedItem ?? EquationType.Calcul))
+                switch ((EquationType)(Exercise?.Type ?? CbType.SelectedItem ?? EquationType.Calcul))
                 {
                     default:
                     case EquationType.Calcul:
@@ -53,10 +55,10 @@ namespace MathCalc.Views
                         answer = expression.Solve("x");
                         break;
                     case EquationType.Derivare:
-                        answer = expression.Differentiate("x");
+                        answer = expression.Differentiate("x").Simplify();
                         break;
                     case EquationType.Integrare:
-                        answer = expression.Integrate("x");
+                        answer = expression.Integrate("x").Simplify();
                         break;
                 }
 
@@ -70,14 +72,23 @@ namespace MathCalc.Views
                 // Check user answer
                 if (!correct)
                 {
-                    if (Exercise?.SolutionVisible != false)
-                        TbFeedback.Text = "Răspuns corect: " + answer.ToString().Replace("+oo", "+∞").Replace("-oo", "-∞") + "\n";
-
                     TbFeedback.Text += "Ai răspuns greșit.";
+
+                    if (Exercise != null)
+                        TbFeedback.Text += "\n" + Exercise.SolveCount + " încercări până acum.";
+
+                    if (Exercise?.SolutionVisible != false)
+                    {
+                        TbFeedback.Text += "\n\nRăspunsul corect:";
+                        FormulaFeedback.Formula = answer.Latexise();
+                    }
                 }
                 else
                 {
                     TbFeedback.Text = "Ai răspuns correct!";
+
+                    if (Exercise != null)
+                        TbFeedback.Text += "\n" + Exercise.SolveCount + " încercări până acum.";
 
                     if (Exercise != null && !Exercise.Solved)
                     {
@@ -87,9 +98,6 @@ namespace MathCalc.Views
                             Client.Send($"Solve,{Exercise.Index},{Exercise.SolveCount}");
                     }
                 }
-
-                if (Exercise != null)
-                    TbFeedback.Text += "\n" + Exercise.SolveCount + " încercări până acum.";
             }
             catch
             {
@@ -103,6 +111,16 @@ namespace MathCalc.Views
             {
                 Entity expression = ParseExpression(TbEquation.Text);
                 Formula.Formula = expression.Latexise();
+            }
+            catch { }
+        }
+
+        private void TbResponse_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            try
+            {
+                Entity expression = ParseExpression(TbAnswer.Text);
+                FormulaFeedback.Formula = expression.Latexise();
             }
             catch { }
         }
@@ -124,17 +142,7 @@ namespace MathCalc.Views
             CbType.SelectedItem = Exercise.Type;
             CkShowSolve.IsChecked = Exercise.SolutionVisible;
 
-            if (Client != null)
-            {
-                TbEquation.IsVisible = false;
-                TbEquation.IsReadOnly = true;
-            }
-            else
-            {
-                TbEquation.IsVisible = true;
-                TbEquation.IsReadOnly = false;
-            }
-
+            TbIndication.Text = Exercise.Indication;
             TbFeedback.Text = Exercise.Indication;
         }
 
@@ -144,6 +152,8 @@ namespace MathCalc.Views
             {
                 Client = new(TbEquation.Text + ":7778");
                 Client.Events.DataReceived += Client_ReceivedData;
+                Client.Events.Connected += Client_Connected;
+                Client.Events.Disconnected += Client_Disconnected;
 
                 Client.Connect();
                 TbFeedback.Text = "Conectat.";
@@ -190,20 +200,68 @@ namespace MathCalc.Views
 
         private async void Exercise_Click(object sender, RoutedEventArgs e)
         {
+            if (Server != null)
+            {
+                try
+                {
+                    Solves = new();
+                    Exercise.Equation = TbEquation.Text;
+                    Exercise.Indication = TbIndication.Text;
+                    Exercise.Type = (EquationType)CbType.SelectedItem;
+                    Exercise.SolutionVisible = CkShowSolve.IsChecked ?? false;
+                    Exercise.Index++;
+                    LoadExercise();
+
+                    foreach (var item in Server.GetClients())
+                    {
+                        await Server.SendAsync(item, $"Exercise,{Exercise.Index},{Exercise.Equation},{Exercise.Indication},{Exercise.Type},{Exercise.SolutionVisible}");
+                    };
+                }
+                catch
+                {
+                    TbFeedback.Text = "Nu se poate trimite exercițiul.";
+                }
+            }
+            else if (Client != null)
+            {
+                try
+                {
+                    await Client.SendAsync($"Exercise,{Exercise?.Index ?? 0 + 1},{TbEquation.Text},Întrebare,{(EquationType)CbType.SelectedItem},true");
+                }
+                catch
+                {
+                    TbFeedback.Text = "Nu se poate trimite exercițiul.";
+                }
+            }
+        }
+
+        private Exercise Question;
+
+        private async void BtRefuse_Click(object sender, RoutedEventArgs e)
+        {
+            QuestionPanel.Opacity = 0;
+
+            await Task.Delay(300);
+
+            QuestionPanel.IsVisible = false;
+        }
+
+        private async void BtAccept_Click(object sender, RoutedEventArgs e)
+        {
+            LoadExercise(Question);
+            QuestionPanel.Opacity = 0;
+
+            await Task.Delay(300);
+
+            QuestionPanel.IsVisible = false;
+        }
+
+        private async void Disconnect_Click(object sender, RoutedEventArgs e)
+        {
             try
             {
-                Solves = new();
-                Exercise.Equation = TbEquation.Text;
-                Exercise.Indication = TbIndication.Text;
-                Exercise.Type = (EquationType)CbType.SelectedItem;
-                Exercise.SolutionVisible = CkShowSolve.IsChecked ?? false;
-                Exercise.Index++;
-                LoadExercise();
-
-                foreach (var item in Server.GetClients())
-                {
-                    await Server.SendAsync(item, $"Exercise,{Exercise.Index},{Exercise.Equation},{Exercise.Indication},{Exercise.Type},{Exercise.SolutionVisible}");
-                };
+                Client.Disconnect();
+                Client = null;
             }
             catch
             {
@@ -265,12 +323,59 @@ namespace MathCalc.Views
                 }
                 catch { }
             }
+            else if (data.StartsWith("Exercise"))
+            {
+                try
+                {
+                    string[] exerciseParts = data.Split(',');
+                    int index = int.Parse(exerciseParts[1]);
+                    string equation = exerciseParts[2];
+                    EquationType type = Enum.Parse<EquationType>(exerciseParts[4]);
+
+                    Question = new()
+                    {
+                        Index = index,
+                        Equation = equation,
+                        SolveCount = 0,
+                        Indication = "Întrebare",
+                        Type = type,
+                        SolutionVisible = true
+                    };
+
+                    Dispatcher.UIThread.Post(() =>
+                        {
+                            FormulaQuestion.Formula = ((Entity)Question.Equation).Latexise();
+                            QuestionPanel.IsVisible = true;
+                            QuestionPanel.Opacity = 1;
+                        }
+                    );
+                }
+                catch { }
+            }
         }
 
         private void Server_ClientConnected(object sender, ConnectionEventArgs e)
         {
             Dispatcher.UIThread.Post(() =>
                 TbFeedback.Text = "Elev conectat.\nElevi: " + Server.Connections
+            );
+        }
+
+        private void Client_Connected(object sender, ConnectionEventArgs e)
+        {
+            Dispatcher.UIThread.Post(() =>
+                {
+                    BtConnect.IsEnabled = false;
+                }
+            );
+        }
+
+        private void Client_Disconnected(object sender, ConnectionEventArgs e)
+        {
+            Dispatcher.UIThread.Post(() =>
+                {
+                    BtConnect.IsEnabled = true;
+                }
             );
         }
     }

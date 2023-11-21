@@ -5,7 +5,7 @@
              xmlns:vm="clr-namespace:MathCalc.ViewModels"
              xmlns:xm="clr-namespace:AvaloniaMath.Controls;assembly=AvaloniaMath"
              xmlns:app="clr-namespace:MathCalc"
-             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="850"
              x:Class="MathCalc.Views.MainView"
              x:DataType="vm:MainViewModel">
 	<UserControl.Styles>
@@ -30,6 +30,18 @@
 				<Setter Property="CornerRadius" Value="8"/>
 			</Style>
 		</Style>
+		<Style Selector="ComboBox /template/ Border#PopupBorder">
+			<Setter Property="CornerRadius" Value="20"/>
+		</Style>
+		<Style Selector="ToolTip">
+			<Setter Property="FontWeight" Value="SemiLight"/>
+			<Setter Property="FontFamily" Value="{StaticResource Overpass}"/>
+			<Setter Property="Padding" Value="10 5 10 3"/>
+			<Setter Property="CornerRadius" Value="20"/>
+			<Setter Property="BorderThickness" Value="3"/>
+			<Setter Property="BorderBrush" Value="#151515"/>
+			<Setter Property="Background" Value="#111"/>
+		</Style>
 		<Style Selector="Button.high">
 			<Setter Property="Foreground" Value="White"/>
 			<Setter Property="Background">
@@ -48,6 +60,13 @@
 			<Setter Property="Transitions">
 				<Transitions>
 					<BrushTransition Duration="0:0:0.2" Property="Background"/>
+				</Transitions>
+			</Setter>
+		</Style>
+		<Style Selector="Border">
+			<Setter Property="Transitions">
+				<Transitions>
+					<DoubleTransition Duration="0:0:0.25" Property="Opacity"/>
 				</Transitions>
 			</Setter>
 		</Style>
@@ -74,14 +93,23 @@
 		<TextBlock x:Name="TbExercise" Text="Exersează" FontWeight="ExtraBold" FontSize="24"></TextBlock>
 		<xm:FormulaBlock HorizontalAlignment="Center" Margin="0 9" x:Name="Formula"></xm:FormulaBlock>
 		<TextBox Watermark="Ecuație" TextChanged="TbEquation_TextChanged" x:Name="TbEquation"></TextBox>
-		<TextBox Watermark="Răspuns" x:Name="TbAnswer"></TextBox>
+		<TextBox Watermark="Răspuns" TextChanged="TbResponse_TextChanged" x:Name="TbAnswer"></TextBox>
 		<ComboBox Padding="12 2 12 -2" x:Name="CbType" HorizontalAlignment="Stretch"></ComboBox>
 		<TextBox Watermark="Indicații" x:Name="TbIndication" Text="Rezolvați ecuația" IsVisible="false"></TextBox>
-		<ScrollViewer MinHeight="70" MaxHeight="135">
-			<TextBlock x:Name="TbFeedback" TextWrapping="Wrap" Margin="0 15" Text="Introduceți o ecuație." HorizontalAlignment="Center" VerticalAlignment="Center"/>
+		<ScrollViewer MinHeight="70" MaxHeight="165">
+			<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+				<TextBlock x:Name="TbFeedback" TextAlignment="Center" TextWrapping="Wrap" Margin="0 15" Text="Introduceți o ecuație." HorizontalAlignment="Center"/>
+				<xm:FormulaBlock HorizontalAlignment="Center" Margin="0 0 0 8" x:Name="FormulaFeedback"></xm:FormulaBlock>
+			</StackPanel>
 		</ScrollViewer>
-		<Button Click="Calc_Click" Classes="high" Content="Verifică răspunsul" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"></Button>
-		<Button Click="Connect_Click" Content="Conectare la profesor" Margin="0 20 0 -4" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch">
+		<Button Click="Calc_Click" Classes="high" Content="Verifică răspunsul" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch">
+			<Button.ContextMenu>
+				<ContextMenu>
+					<MenuItem FontFamily="{StaticResource Overpass}" Margin="0 2 0 -2" FontWeight="Medium" Click="Disconnect_Click" Header="Deconectare"></MenuItem>
+				</ContextMenu>
+			</Button.ContextMenu>
+		</Button>
+		<Button x:Name="BtConnect" Click="Connect_Click" Content="Conectare la profesor" Margin="0 20 0 -4" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch">
 			<Button.ContextMenu>
 				<ContextMenu>
 					<MenuItem FontFamily="{StaticResource Overpass}" Margin="0 2 0 -2" FontWeight="Medium" Click="Server_Click" Header="Pornire server profesor"></MenuItem>
@@ -89,7 +117,7 @@
 			</Button.ContextMenu>
 		</Button>
 		<Grid ColumnDefinitions="*, auto" HorizontalAlignment="Stretch">
-			<Button Click="Exercise_Click" Content="Trimitere exercițiu" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"></Button>
+			<Button x:Name="BtSend" Click="Exercise_Click" Content="Trimitere exercițiu" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"></Button>
 			<ToggleButton x:Name="CkShowSolve" ToolTip.Tip="Soluție vizibilă" IsChecked="True" Padding="8" Grid.Column="1" Margin="3 0 0 0" Width="33" Height="33" CornerRadius="28" HorizontalContentAlignment="Center">
 				<Viewbox>
 					<Path Height="470" Width="570" Fill="White" Data="M572.52 241.4C518.29 135.59 410.93 64 288 64S57.68 135.64 3.48 241.41a32.35 32.35 0 0 0 0 29.19C57.71 376.41 165.07 448 288 448s230.32-71.64 284.52-177.41a32.35 32.35 0 0 0 0-29.19zM288 400a144 144 0 1 1 144-144 143.93 143.93 0 0 1-144 144zm0-240a95.31 95.31 0 0 0-25.31 3.79 47.85 47.85 0 0 1-66.9 66.9A95.78 95.78 0 1 0 288 160z">
@@ -97,5 +125,23 @@
 				</Viewbox>
 			</ToggleButton>
 		</Grid>
+		<Border x:Name="QuestionPanel" IsVisible="False" Opacity="0" Margin="5 0 0 0" CornerRadius="18 0 0 18" Padding="10 5 10 10" Background="#223">
+			<Grid RowDefinitions="auto, auto" ColumnDefinitions="*, auto, auto" MinHeight="100">
+				<TextBlock FontFamily="{StaticResource Overpass}" FontWeight="DemiBold" FontSize="20" Grid.ColumnSpan="3" HorizontalAlignment="Left" Padding="6 12 0 0" Text="Întrebare"></TextBlock>
+				<xm:FormulaBlock Grid.Row="1" Grid.ColumnSpan="3" HorizontalAlignment="Center" Margin="0 0 0 8" x:Name="FormulaQuestion"></xm:FormulaBlock>
+				<Button x:Name="BtAccept" Click="BtAccept_Click" Grid.Row="2" Grid.Column="1" ToolTip.Tip="Accepta" Background="#70CC70" Padding="8" Margin="3 0 0 0" Width="33" Height="33" CornerRadius="28" HorizontalContentAlignment="Center">
+					<Viewbox>
+						<Path Height="22" Width="24" Margin="-3" Fill="White" Data="M10,18c-0.5,0-1-0.2-1.4-0.6l-4-4c-0.8-0.8-0.8-2,0-2.8c0.8-0.8,2.1-0.8,2.8,0l2.6,2.6l6.6-6.6   c0.8-0.8,2-0.8,2.8,0c0.8,0.8,0.8,2,0,2.8l-8,8C11,17.8,10.5,18,10,18z">
+						</Path>
+					</Viewbox>
+				</Button>
+				<Button x:Name="BtRefuse" Click="BtRefuse_Click" Grid.Row="2" Grid.Column="2" ToolTip.Tip="Refuza" Background="#CC7070" Padding="8" Margin="6 0 0 0" Width="33" Height="33" CornerRadius="28" HorizontalContentAlignment="Center">
+					<Viewbox>
+						<Path Height="22" Width="24" Margin="-3" Fill="White" Data="M14.8,12l3.6-3.6c0.8-0.8,0.8-2,0-2.8c-0.8-0.8-2-0.8-2.8,0L12,9.2L8.4,5.6c-0.8-0.8-2-0.8-2.8,0   c-0.8,0.8-0.8,2,0,2.8L9.2,12l-3.6,3.6c-0.8,0.8-0.8,2,0,2.8C6,18.8,6.5,19,7,19s1-0.2,1.4-0.6l3.6-3.6l3.6,3.6   C16,18.8,16.5,19,17,19s1-0.2,1.4-0.6c0.8-0.8,0.8-2,0-2.8L14.8,12z">
+						</Path>
+					</Viewbox>
+				</Button>
+			</Grid>
+		</Border>
 	</StackPanel>
 </UserControl>

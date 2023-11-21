@@ -3,7 +3,7 @@
         xmlns:vm="using:MathCalc.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:views="clr-namespace:MathCalc.Views" Width="420" Height="610"
+        xmlns:views="clr-namespace:MathCalc.Views" Width="460" Height="650"
         mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="450"
         x:Class="MathCalc.Views.MainWindow" ExtendClientAreaToDecorationsHint="True"
         Icon="/Assets/logo.ico" Closing="Main_Closing" FontFamily="{StaticResource Overpass}"
