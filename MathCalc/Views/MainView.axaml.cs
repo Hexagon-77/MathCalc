@@ -34,7 +34,7 @@ namespace MathCalc.Views
 
         private Entity ParseExpression(string exp)
         {
-            return exp.Replace("lim", "limit").Replace("deriv(", "derivative").Replace("int(", "integral").Replace("tg", "tan").Replace("+inf", "+oo").Replace("-inf", "-oo").Replace("inf", "+oo");
+            return exp.Replace("lim", "limit").Replace("deriv(", "derivative(").Replace("int(", "integral(").Replace("tg", "tan").Replace("+inf", "+oo").Replace("-inf", "-oo").Replace("inf", "+oo");
         }
 
         private void Calc_Click(object sender, RoutedEventArgs e)
@@ -70,6 +70,9 @@ namespace MathCalc.Views
 
                 bool correct = response.Simplify().EqualsImprecisely(answer.Simplify());
 
+                if (answer is Entity.Set.FiniteSet set && set.Count == 1 && set.First().EqualsImprecisely(response))
+                    correct = true;
+
                 // Check user answer
                 if (!correct)
                 {
@@ -87,6 +90,7 @@ namespace MathCalc.Views
                 else
                 {
                     TbFeedback.Text = "Ai răspuns correct!";
+                    TbEquation.IsReadOnly = false;
 
                     if (Exercise != null)
                         TbFeedback.Text += "\n" + Exercise.SolveCount + " încercări până acum.";
@@ -144,6 +148,9 @@ namespace MathCalc.Views
 
             TbAnswer.Text = string.Empty;
             FormulaFeedback.Formula = string.Empty;
+
+            if (Client != null)
+                TbEquation.IsReadOnly = true;
 
             TbIndication.Text = Exercise.Indication;
             TbFeedback.Text = Exercise.Indication;
