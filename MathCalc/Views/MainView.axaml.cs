@@ -29,12 +29,17 @@ namespace MathCalc.Views
             CbType.SelectedIndex = 0;
         }
 
+        private Entity ParseExpression(string exp)
+        {
+            return exp.Replace("lim", "limit").Replace("deriv", "derivative").Replace("int", "integral").Replace("tg", "tan").Replace("+inf", "+oo").Replace("-inf", "-oo");
+        }
+
         private void Calc_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 TbFeedback.Text = "";
-                Entity expression = TbEquation.Text ?? "0";
+                Entity expression = ParseExpression(TbEquation.Text ?? "0");
                 Formula.Formula = expression.Latexise();
                 Entity answer;
 
@@ -53,15 +58,9 @@ namespace MathCalc.Views
                     case EquationType.Integrare:
                         answer = expression.Integrate("x");
                         break;
-                    case EquationType.LimitaInfinit:
-                        answer = expression.Limit("x", "+oo");
-                        break;
-                    case EquationType.LimitaMinInfinit:
-                        answer = expression.Limit("x", "-oo");
-                        break;
                 }
 
-                Entity response = TbAnswer.Text ?? "0";
+                Entity response = ParseExpression(TbAnswer.Text ?? "0");
 
                 if (Exercise != null && !Exercise.Solved)
                     Exercise.SolveCount++;
@@ -71,8 +70,10 @@ namespace MathCalc.Views
                 // Check user answer
                 if (!correct)
                 {
-                    TbFeedback.Text = "Răspuns corect: " + answer.ToString();
-                    TbFeedback.Text += "\nAi răspuns greșit.";
+                    if (Exercise?.SolutionVisible != false)
+                        TbFeedback.Text = "Răspuns corect: " + answer.ToString().Replace("+oo", "+∞").Replace("-oo", "-∞") + "\n";
+
+                    TbFeedback.Text += "Ai răspuns greșit.";
                 }
                 else
                 {
@@ -100,7 +101,7 @@ namespace MathCalc.Views
         {
             try
             {
-                Entity expression = TbEquation.Text;
+                Entity expression = ParseExpression(TbEquation.Text);
                 Formula.Formula = expression.Latexise();
             }
             catch { }
@@ -121,6 +122,7 @@ namespace MathCalc.Views
             TbEquation.Text = Exercise.Equation;
 
             CbType.SelectedItem = Exercise.Type;
+            CkShowSolve.IsChecked = Exercise.SolutionVisible;
 
             if (Client != null)
             {
@@ -162,6 +164,7 @@ namespace MathCalc.Views
 
                 Server = new("*:7778");
                 Server.Events.DataReceived += Server_ReceivedData;
+                Server.Events.ClientConnected += Server_ClientConnected;
                 Server.Start();
                 TbFeedback.Text = "Server profesor pornit.\nCod de conectare: " + GetIPAddress().ToString();
             }
@@ -193,12 +196,13 @@ namespace MathCalc.Views
                 Exercise.Equation = TbEquation.Text;
                 Exercise.Indication = TbIndication.Text;
                 Exercise.Type = (EquationType)CbType.SelectedItem;
+                Exercise.SolutionVisible = CkShowSolve.IsChecked ?? false;
                 Exercise.Index++;
                 LoadExercise();
 
                 foreach (var item in Server.GetClients())
                 {
-                    await Server.SendAsync(item, $"Exercise,{Exercise.Index},{Exercise.Equation},{Exercise.Indication},{Exercise.Type}");
+                    await Server.SendAsync(item, $"Exercise,{Exercise.Index},{Exercise.Equation},{Exercise.Indication},{Exercise.Type},{Exercise.SolutionVisible}");
                 };
             }
             catch
@@ -220,6 +224,7 @@ namespace MathCalc.Views
                     string equation = exerciseParts[2];
                     string indication = exerciseParts[3];
                     EquationType type = Enum.Parse<EquationType>(exerciseParts[4]);
+                    bool showSolve = bool.Parse(exerciseParts[5]);
 
                     Exercise receivedExercise = new()
                     {
@@ -227,7 +232,8 @@ namespace MathCalc.Views
                         Equation = equation,
                         SolveCount = 0,
                         Indication = indication,
-                        Type = type
+                        Type = type,
+                        SolutionVisible = showSolve
                     };
 
                     Dispatcher.UIThread.Post(() =>
@@ -260,6 +266,13 @@ namespace MathCalc.Views
                 catch { }
             }
         }
+
+        private void Server_ClientConnected(object sender, ConnectionEventArgs e)
+        {
+            Dispatcher.UIThread.Post(() =>
+                TbFeedback.Text = "Elev conectat.\nElevi: " + Server.Connections
+            );
+        }
     }
 
     public class Exercise
@@ -270,6 +283,7 @@ namespace MathCalc.Views
         public int SolveCount = 0;
         public EquationType Type = EquationType.Calcul;
 
+        public bool SolutionVisible = true;
         public bool Solved = false;
     }
 
@@ -278,8 +292,6 @@ namespace MathCalc.Views
         Calcul,
         Ecuatie,
         Derivare,
-        Integrare,
-        LimitaInfinit,
-        LimitaMinInfinit
+        Integrare
     }
 }
