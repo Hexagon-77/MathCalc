@@ -32,46 +32,38 @@ namespace MathCalc.Views
             CbType.SelectedIndex = 0;
         }
 
-        private Entity ParseExpression(string exp)
-        {
-            return exp.Replace("lim", "limit").Replace("deriv(", "derivative(").Replace("int(", "integral(").Replace("tg", "tan").Replace("+inf", "+oo").Replace("-inf", "-oo").Replace("inf", "+oo");
-        }
-
         private void Calc_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 TbFeedback.Text = "";
-                Entity expression = ParseExpression(TbEquation.Text ?? "0");
-                Formula.Formula = expression.Latexise();
-                Entity answer;
+                IAlgebraicEntity expression = AngouriEntity.ParseString(TbEquation.Text ?? "0");
+                Formula.Formula = expression.GetLatex();
+                IAlgebraicEntity answer;
 
                 switch ((EquationType)(Exercise?.Type ?? CbType.SelectedItem ?? EquationType.Calcul))
                 {
                     default:
                     case EquationType.Calcul:
-                        answer = expression.Simplify();
+                        answer = expression.Calculate();
                         break;
                     case EquationType.Ecuatie:
-                        answer = expression.Solve("x");
+                        answer = expression.Solve();
                         break;
                     case EquationType.Derivare:
-                        answer = expression.Differentiate("x").Simplify();
+                        answer = expression.Differentiate();
                         break;
                     case EquationType.Integrare:
-                        answer = expression.Integrate("x").Simplify();
+                        answer = expression.Integrate();
                         break;
                 }
 
-                Entity response = ParseExpression(TbAnswer.Text ?? "0");
+                IAlgebraicEntity response = AngouriEntity.ParseString(TbAnswer.Text ?? "0");
 
                 if (Exercise != null && !Exercise.Solved)
                     Exercise.SolveCount++;
 
-                bool correct = response.Simplify().EqualsImprecisely(answer.Simplify());
-
-                if (answer is Entity.Set.FiniteSet set && set.Count == 1 && set.First().EqualsImprecisely(response))
-                    correct = true;
+                bool correct = AngouriEntity.Compare(answer, response);
 
                 // Check user answer
                 if (!correct)
@@ -84,7 +76,7 @@ namespace MathCalc.Views
                     if (Exercise?.SolutionVisible != false)
                     {
                         TbFeedback.Text += "\n\nRăspunsul corect:";
-                        FormulaFeedback.Formula = answer.Latexise();
+                        FormulaFeedback.Formula = answer.GetLatex();
                     }
                 }
                 else
@@ -113,8 +105,8 @@ namespace MathCalc.Views
         {
             try
             {
-                Entity expression = ParseExpression(TbEquation.Text);
-                Formula.Formula = expression.Latexise();
+                IAlgebraicEntity expression = AngouriEntity.ParseString(TbEquation.Text);
+                Formula.Formula = expression.GetLatex();
             }
             catch { }
         }
@@ -123,8 +115,8 @@ namespace MathCalc.Views
         {
             try
             {
-                Entity expression = ParseExpression(TbAnswer.Text);
-                FormulaFeedback.Formula = expression.Latexise();
+                IAlgebraicEntity expression = AngouriEntity.ParseString(TbAnswer.Text);
+                FormulaFeedback.Formula = expression.GetLatex();
             }
             catch { }
         }
